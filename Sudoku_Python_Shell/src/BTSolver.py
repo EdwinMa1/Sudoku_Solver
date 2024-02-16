@@ -48,6 +48,8 @@ class BTSolver:
                 The bool is true if assignment is consistent, false otherwise.
     """
     def forwardChecking ( self ):
+        # test first commit
+    
         return ({},False)
 
     # =================================================================
