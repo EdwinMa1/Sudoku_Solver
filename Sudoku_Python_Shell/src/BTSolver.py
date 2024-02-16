@@ -50,7 +50,7 @@ class BTSolver:
     def forwardChecking ( self ):
         # test first commit
     
-        return ({}, True)
+        return ({},False)
 
     # =================================================================
 	# Arc Consistency
