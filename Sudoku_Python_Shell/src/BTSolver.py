@@ -68,7 +68,6 @@ class BTSolver:
         if var is None:
             return ({}, True)
         assignment = var.getAssignment()
-        print(self.network.toSudokuBoard(3, 3))
         neighbors = self.network.getNeighborsOfVariable(var)
         for neighbor in neighbors:
             
