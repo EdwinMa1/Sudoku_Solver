@@ -56,7 +56,6 @@ class BTSolver:
                     #trail push for the modified neighbor
                     # rm the assignment from the neighbor's domain
                     if not (neighbor.isAssigned()):
-                        self.trail.push(neighbor)
                         neighbor.removeValueFromDomain(assignment)
                     if (neighbor.domain.size() == 0):
                         return ({}, False) 
@@ -70,13 +69,14 @@ class BTSolver:
         assignment = var.getAssignment()
         neighbors = self.network.getNeighborsOfVariable(var)
         for neighbor in neighbors:
-            
+            if (assignment == neighbor.getAssignment()):
+                return ({}, False)
             #trail push for the modified neighbor
             # rm the assignment from the neighbor's domain
             if not (neighbor.isAssigned()):
                 self.trail.push(neighbor)
                 neighbor.removeValueFromDomain(assignment)
-            if (neighbor.domain.size() == 0):
+            if (neighbor.domain.size() <= 0):
                 return ({}, False) 
 
         return ({}, True)
