@@ -48,9 +48,39 @@ class BTSolver:
                 The bool is true if assignment is consistent, false otherwise.
     """
     def forwardChecking ( self ):
-        # test first commit
-    
-        return ({},False)
+        for v in self.network.getVariables():
+            if not v.isChangeable():
+                assignment = v.getAssignment()
+                neighbors = self.network.getNeighborsOfVariable(v)
+                for neighbor in neighbors:
+                    #trail push for the modified neighbor
+                    # rm the assignment from the neighbor's domain
+                    if not (neighbor.isAssigned()):
+                        self.trail.push(neighbor)
+                        neighbor.removeValueFromDomain(assignment)
+                    if (neighbor.domain.size() == 0):
+                        return ({}, False) 
+        var = None
+        for v in reversed(self.network.getVariables()):
+            if v.isChangeable() and v.isAssigned():
+                var = v
+                break
+        if var is None:
+            return ({}, True)
+        assignment = var.getAssignment()
+        print(self.network.toSudokuBoard(3, 3))
+        neighbors = self.network.getNeighborsOfVariable(var)
+        for neighbor in neighbors:
+            
+            #trail push for the modified neighbor
+            # rm the assignment from the neighbor's domain
+            if not (neighbor.isAssigned()):
+                self.trail.push(neighbor)
+                neighbor.removeValueFromDomain(assignment)
+            if (neighbor.domain.size() == 0):
+                return ({}, False) 
+
+        return ({}, True)
 
     # =================================================================
 	# Arc Consistency
@@ -201,7 +231,6 @@ class BTSolver:
 
             # Assign the value
             v.assignValue( i )
-
             # Propagate constraints, check consistency, recur
             if self.checkConsistency():
                 elapsed_time = time.time() - start_time 
@@ -215,7 +244,6 @@ class BTSolver:
 
             # Otherwise backtrack
             self.trail.undo()
-        
         return 0
 
     def checkConsistency ( self ):
