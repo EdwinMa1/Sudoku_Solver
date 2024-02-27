@@ -22,6 +22,8 @@ class BTSolver:
         self.varHeuristics = var_sh
         self.valHeuristics = val_sh
         self.cChecks = cc
+        self.loaded = False
+
 
     # ==================================================================
     # Consistency Checks
@@ -48,17 +50,18 @@ class BTSolver:
                 The bool is true if assignment is consistent, false otherwise.
     """
     def forwardChecking ( self ):
-        for v in self.network.getVariables():
-            if not v.isChangeable():
-                assignment = v.getAssignment()
-                neighbors = self.network.getNeighborsOfVariable(v)
-                for neighbor in neighbors:
-                    #trail push for the modified neighbor
-                    # rm the assignment from the neighbor's domain
-                    if not (neighbor.isAssigned()):
-                        neighbor.removeValueFromDomain(assignment)
-                    if (neighbor.domain.size() == 0):
-                        return ({}, False) 
+        if not self.loaded:
+            self.loaded = True
+            for v in self.network.getVariables():
+                if not v.isChangeable():
+                    assignment = v.getAssignment()
+                    neighbors = self.network.getNeighborsOfVariable(v)
+                    for neighbor in neighbors:
+
+                        if not (neighbor.isAssigned()):
+                            neighbor.removeValueFromDomain(assignment)
+                        if (neighbor.domain.size() == 0):
+                            return ({}, False) 
         var = None
         for v in reversed(self.network.getVariables()):
             if v.isChangeable() and v.isAssigned():
@@ -148,7 +151,13 @@ class BTSolver:
         Return: The unassigned variable with the smallest domain
     """
     def getMRV ( self ):
-        return None
+        min = None
+        for v in self.network.getVariables():
+            if not v.isAssigned():
+                domain_val = v.getDomain().size()
+                if min is None or min > domain_val:
+                    min = domain_val
+        return min
 
     """
         Part 2 TODO: Implement the Minimum Remaining Value Heuristic
