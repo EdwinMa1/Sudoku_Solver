@@ -24,6 +24,7 @@ class BTSolver:
         self.cChecks = cc
         self.loaded = False
 
+        self.recent_vars = []
 
     # ==================================================================
     # Consistency Checks
@@ -62,11 +63,10 @@ class BTSolver:
                             neighbor.removeValueFromDomain(assignment)
                         if (neighbor.domain.size() == 0):
                             return ({}, False) 
-        var = None
-        for v in reversed(self.network.getVariables()):
-            if v.isChangeable() and v.isAssigned():
-                var = v
-                break
+        if self.recent_vars == []:
+            return ({}, False)
+        var = self.recent_vars[-1]
+        
         if var is None:
             return ({}, True)
         assignment = var.getAssignment()
@@ -236,7 +236,7 @@ class BTSolver:
             # Store place in trail and push variable's state on trail
             self.trail.placeTrailMarker()
             self.trail.push( v )
-
+            self.recent_vars.append(v)
             # Assign the value
             v.assignValue( i )
             # Propagate constraints, check consistency, recur
@@ -252,9 +252,13 @@ class BTSolver:
 
             # Otherwise backtrack
             self.trail.undo()
+            self.recent_vars.pop()
         return 0
 
     def checkConsistency ( self ):
+
+
+        
         if self.cChecks == "forwardChecking":
             return self.forwardChecking()[1]
 
