@@ -185,7 +185,22 @@ class BTSolver:
                 The LCV is first and the MCV is last
     """
     def getValuesLCVOrder ( self, v ):
-        return None
+        values = v.getValues()
+        values.sort(key=lambda val: self.calculateLCVScore(v, val))
+        return values
+
+    def calculateLCVScore(self, v, value):
+        constraining_count = 0
+        neighbors = self.network.getNeighborsOfVariable(v)
+
+        for neighbor in neighbors:
+            if not neighbor.isAssigned():
+                neighbor_domain = neighbor.getDomain()
+                if value in neighbor_domain.values:
+                    constraining_count += 1
+
+        return constraining_count
+
 
     """
          Optional TODO: Implement your own advanced Value Heuristic
