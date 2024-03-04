@@ -87,7 +87,6 @@ def main ( ):
             if cc in ["forwardChecking","norvigCheck","tournCC"]:
                 solver.checkConsistency()
             solver.solve()
-
             if solver.hassolution:
                 numSolutions += 1;
 
