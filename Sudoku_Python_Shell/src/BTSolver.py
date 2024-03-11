@@ -150,12 +150,29 @@ class BTSolver:
         Part 2 TODO: Implement the Minimum Remaining Value Heuristic
                        with Degree Heuristic as a Tie Breaker
 
-        Return: The unassigned variable with the smallest domain and affecting the  most unassigned neighbors.
+        Return: The unassigned variable with the smallest domain and affecting the most unassigned neighbors.
                 If there are multiple variables that have the same smallest domain with the same number of unassigned neighbors, add them to the list of Variables.
                 If there is only one variable, return the list of size 1 containing that variable.
     """
     def MRVwithTieBreaker ( self ):
-        return None
+        unassignedVariables = [v for v in self.network.getVariables() if not v.isAssigned()]
+        if not unassignedVariables:
+            return [None]
+
+        # sort with tiebreaker
+        sortedVariables = min(unassignedVariables, key=lambda v: (v.getDomain().size(), -self.getUnassignedNeighborsCount(v)))
+        # one var
+        return [sortedVariables]
+
+        # tiebreak
+        # minMrv = sortedVariables[0].getDomain().size()
+        # minUnassignedNeighbors = self.getUnassignedNeighborsCount(sortedVariables[0])
+        # mrvTiebreakers = [v for v in sortedVariables if v.getDomain().size() == minMrv and self.getUnassignedNeighborsCount(v) == minUnassignedNeighbors]
+
+        # return mrvTiebreakers
+    def getUnassignedNeighborsCount(self, v):
+        unassigned_neighbors = [n for n in self.network.getNeighborsOfVariable(v) if not n.isAssigned()]
+        return len(unassigned_neighbors)
 
     """
          Optional TODO: Implement your own advanced Variable Heuristic
@@ -225,7 +242,6 @@ class BTSolver:
 
         # Variable Selection
         v = self.selectNextVariable()
-
         # check if the assigment is complete
         if ( v == None ):
             # Success
