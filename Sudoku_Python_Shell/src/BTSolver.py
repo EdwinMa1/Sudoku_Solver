@@ -57,20 +57,23 @@ class BTSolver:
         
         if var is None:
             return ({}, True)
+        return ({}, self.updateNeigborDomain(var))
+        return True
+
+    def updateNeigborDomain(self, var):
         assignment = var.getAssignment()
         neighbors = self.network.getNeighborsOfVariable(var)
         for neighbor in neighbors:
             if (assignment == neighbor.getAssignment()):
-                return ({}, False)
+                return False
             #trail push for the modified neighbor
             # rm the assignment from the neighbor's domain
             if not (neighbor.isAssigned()):
                 self.trail.push(neighbor)
                 neighbor.removeValueFromDomain(assignment)
             if (neighbor.domain.size() <= 0):
-                return ({}, False) 
-
-        return ({}, True)
+                return False 
+        return True
 
     # =================================================================
 	# Arc Consistency
@@ -109,7 +112,29 @@ class BTSolver:
                 The bool is true if assignment is consistent, false otherwise.
     """
     def norvigCheck ( self ):
-        return ({}, False)
+        if (self.forwardChecking()[1]) is False:
+            return ({}, False)
+        var = self.recent_vars[-1]
+        relevant_constraints = getConstraintsContainingVariable(var)
+        for c in relevant_constraints:
+            unassigned_count = 0
+            for v in c.vars:
+                if not v.isAssigned():
+                    unassigned_count += 1
+            if unassigned_count == 1:
+                # assign it
+                for v in c.vars:
+                    if not v.isAssigned():
+                        for possible_fill in v.getValues():
+                            v.assign(possible_fill)
+                            if c.isConsistent():
+                                self.trail.push(v)
+                                if not self.updateNeigborDomain(v):
+                                    return  ({}, False)
+                                break
+                        break
+
+        return ({}, True)
 
     """
          Optional TODO: Implement your own advanced Constraint Propagation
@@ -160,9 +185,19 @@ class BTSolver:
             return [None]
 
         # sort with tiebreaker
-        sortedVariables = min(unassignedVariables, key=lambda v: (v.getDomain().size(), -self.getUnassignedNeighborsCount(v)))
-        # one var
-        return [sortedVariables]
+        sortedVariables = sorted(unassignedVariables, key=lambda v: (v.getDomain().size()))
+        minMrv = sortedVariables[0].getDomain().size()
+        tiedSet = [sortedVariables[0]]
+        for i in range(len(sortedVariables) - 1, 0, -1):
+            if (sortedVariables[i].getDomain().size() == minMrv):
+                tiedSet = sortedVariables[0:i+1]
+                break
+        if len(tiedSet) == 1:
+             # one var
+            return [sortedVariables[0]]
+        tieBreakerByNeighbors = min(tiedSet, key = lambda v: (-self.getUnassignedNeighborsCount(v)))
+        return [tieBreakerByNeighbors]
+       
 
         # tiebreak
         # minMrv = sortedVariables[0].getDomain().size()
@@ -171,6 +206,7 @@ class BTSolver:
 
         # return mrvTiebreakers
     def getUnassignedNeighborsCount(self, v):
+        # too inefficient
         unassigned_neighbors = [n for n in self.network.getNeighborsOfVariable(v) if not n.isAssigned()]
         return len(unassigned_neighbors)
 
