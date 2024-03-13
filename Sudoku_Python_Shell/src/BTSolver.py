@@ -112,10 +112,13 @@ class BTSolver:
                 The bool is true if assignment is consistent, false otherwise.
     """
     def norvigCheck ( self ):
-        if (self.forwardChecking()[1]) is False:
+        if self.recent_vars == []:
             return ({}, False)
         var = self.recent_vars[-1]
-        relevant_constraints = getConstraintsContainingVariable(var)
+        if not self.updateNeigborDomain(var):
+            return ({}, False)
+
+        relevant_constraints = self.network.getConstraintsContainingVariable(var)
         for c in relevant_constraints:
             unassigned_count = 0
             for v in c.vars:
@@ -126,12 +129,14 @@ class BTSolver:
                 for v in c.vars:
                     if not v.isAssigned():
                         for possible_fill in v.getValues():
-                            v.assign(possible_fill)
+                            v.assignValue(possible_fill)
                             if c.isConsistent():
                                 self.trail.push(v)
                                 if not self.updateNeigborDomain(v):
                                     return  ({}, False)
                                 break
+                            else:
+                                v.unassign()
                         break
 
         return ({}, True)
@@ -185,16 +190,12 @@ class BTSolver:
             return [None]
 
         # sort with tiebreaker
-        sortedVariables = sorted(unassignedVariables, key=lambda v: (v.getDomain().size()))
-        minMrv = sortedVariables[0].getDomain().size()
-        tiedSet = [sortedVariables[0]]
-        for i in range(len(sortedVariables) - 1, 0, -1):
-            if (sortedVariables[i].getDomain().size() == minMrv):
-                tiedSet = sortedVariables[0:i+1]
-                break
+        sortedVariables = min(unassignedVariables, key=lambda v: (v.getDomain().size()))
+        minMrv = sortedVariables.getDomain().size()
+        tiedSet = [n for n in unassignedVariables if minMrv == n.getDomain().size()]
         if len(tiedSet) == 1:
              # one var
-            return [sortedVariables[0]]
+            return [sortedVariables]
         tieBreakerByNeighbors = min(tiedSet, key = lambda v: (-self.getUnassignedNeighborsCount(v)))
         return [tieBreakerByNeighbors]
        
