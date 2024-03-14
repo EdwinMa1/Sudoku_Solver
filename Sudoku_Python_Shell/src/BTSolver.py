@@ -58,7 +58,6 @@ class BTSolver:
         if var is None:
             return ({}, True)
         return ({}, self.updateNeigborDomain(var))
-        return True
 
     def updateNeigborDomain(self, var):
         assignment = var.getAssignment()
