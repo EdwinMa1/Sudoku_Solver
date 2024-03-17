@@ -24,7 +24,10 @@ class BTSolver:
         self.cChecks = cc
         self.loaded = False
 
+        # new constructor
         self.recent_vars = []
+        self.tournCCCalled = 0
+        self.halfway = self.gameboard.N * self.gameboard.N / 2
 
     # ==================================================================
     # Consistency Checks
@@ -127,15 +130,10 @@ class BTSolver:
                 # assign it
                 for v in c.vars:
                     if not v.isAssigned():
-                        for possible_fill in v.getValues():
-                            v.assignValue(possible_fill)
-                            if c.isConsistent():
-                                self.trail.push(v)
-                                if not self.updateNeigborDomain(v):
-                                    return  ({}, False)
-                                break
-                            else:
-                                v.unassign()
+                        v.assignValue(v.getValues()[0])
+                        self.trail.push(v)
+                        if not self.updateNeigborDomain(v):
+                            return  ({}, False)
                         break
 
         return ({}, True)
@@ -147,7 +145,13 @@ class BTSolver:
          your program into a tournament.
      """
     def getTournCC ( self ):
-        return False
+        self.tournCCCalled += 1
+        print(self.gameboard.N)
+        
+        if self.tournCCCalled < self.halfway:
+            return self.forwardChecking()
+        else:
+            return self.norvigCheck()
 
     # ==================================================================
     # Variable Selectors
@@ -189,9 +193,9 @@ class BTSolver:
             return [None]
 
         # sort with tiebreaker
-        sortedVariables = min(unassignedVariables, key=lambda v: (v.getDomain().size()))
+        sortedVariables = min(unassignedVariables, key=lambda v: (v.getDomain().size())) 
         minMrv = sortedVariables.getDomain().size()
-        tiedSet = [n for n in unassignedVariables if minMrv == n.getDomain().size()]
+        tiedSet = [n for n in unassignedVariables if minMrv == n.getDomain().size()] 
         if len(tiedSet) == 1:
              # one var
             return [sortedVariables]
@@ -199,14 +203,7 @@ class BTSolver:
         return [tieBreakerByNeighbors]
        
 
-        # tiebreak
-        # minMrv = sortedVariables[0].getDomain().size()
-        # minUnassignedNeighbors = self.getUnassignedNeighborsCount(sortedVariables[0])
-        # mrvTiebreakers = [v for v in sortedVariables if v.getDomain().size() == minMrv and self.getUnassignedNeighborsCount(v) == minUnassignedNeighbors]
-
-        # return mrvTiebreakers
     def getUnassignedNeighborsCount(self, v):
-        # too inefficient
         unassigned_neighbors = [n for n in self.network.getNeighborsOfVariable(v) if not n.isAssigned()]
         return len(unassigned_neighbors)
 
@@ -217,7 +214,7 @@ class BTSolver:
          your program into a tournament.
      """
     def getTournVar ( self ):
-        return None
+        return self.getMRV()
 
     # ==================================================================
     # Value Selectors
@@ -262,7 +259,7 @@ class BTSolver:
          your program into a tournament.
      """
     def getTournVal ( self, v ):
-        return None
+        return self.getValuesLCVOrder (v) 
 
     # ==================================================================
     # Engine Functions
