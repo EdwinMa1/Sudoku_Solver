@@ -122,6 +122,52 @@ class BTSolver:
         if not self.updateNeigborDomain(var):
             return ({}, False)
 
+        for c in self.network.getConstraints():
+            for val in range(1, self.gameboard.N + 1):
+                timesValAvailable = 0
+                unassignedVars = []
+                for vari in c.vars:
+                    if vari.isAssigned() and vari.getAssignment() == val:
+                        break
+                    if not vari.isAssigned() and val in vari.getValues():
+                        timesValAvailable += 1
+                        unassignedVars.append(vari)
+                if timesValAvailable == 1:
+                    unassignedVars[0].assignValue(val)
+                    self.trail.push(unassignedVars[0])
+                    if not self.updateNeigborDomain(unassignedVars[0]):
+                        return  ({}, False)    
+        return ({}, True)
+
+        
+
+    """
+         Optional TODO: Implement your own advanced Constraint Propagation
+
+         Completing the three tourn heuristic will automatically enter
+         your program into a tournament.
+     """
+    def getTournCC ( self ):
+        self.tournCCCalled += 1
+        
+        if self.tournCCCalled < self.halfway:
+            return self.forwardChecking()
+        else:
+            if self.tournCCCalled % 4 == 1:
+                return self.singleSpotCheck()
+            elif self.tournCCCalled % 4 == 3:
+                return self.forwardChecking()
+            else:
+                return self.norvigCheck()
+                
+
+    def singleSpotCheck ( self ):
+        if self.recent_vars == []:
+            return ({}, False)
+        var = self.recent_vars[-1]
+        if not self.updateNeigborDomain(var):
+            return ({}, False)
+
         relevant_constraints = self.network.getConstraintsContainingVariable(var)
         for c in relevant_constraints:
             unassigned_count = 0
@@ -137,53 +183,6 @@ class BTSolver:
                         if not self.updateNeigborDomain(v):
                             return  ({}, False)
                         break
-
-        return ({}, True)
-
-    """
-         Optional TODO: Implement your own advanced Constraint Propagation
-
-         Completing the three tourn heuristic will automatically enter
-         your program into a tournament.
-     """
-    def getTournCC ( self ):
-        self.tournCCCalled += 1
-        
-        if self.tournCCCalled < self.halfway or self.tournCCCalled % 2 == 0:
-            return self.forwardChecking()
-        else:
-            return self.norvigCheck()
-
-    def singleDoublesTriplesValueCheck ( self ):
-        if self.recent_vars == []:
-            return ({}, False)
-        var = self.recent_vars[-1]
-        if not self.updateNeigborDomain(var):
-            return ({}, False)
-
-        relevant_constraints = self.network.getConstraintsContainingVariable(var)
-        for c in self.network.getConstraints():
-            for val in range(1, self.gameboard.N + 1):
-                timesValAvailable = 0
-                unassignedVars = []
-                for vari in c.vars:
-                    if vari.isAssigned() and vari.getAssignment() == val:
-                        break
-                    if not vari.isAssigned() and val in vari.getValues():
-                        timesValAvailable += 1
-                        unassignedVars.append(vari)
-                if timesValAvailable == 1:
-                    unassignedVars[0].assignValue(val)
-                    self.trail.push(unassignedVars[0])
-                    if not self.updateNeigborDomain(unassignedVars[0]):
-                        return  ({}, False)
-                if timesValAvailable == 2:
-                    # doubles
-                    pass
-                if timesValAvailable == 3:
-                    # triples
-                    pass
-
 
         return ({}, True)
 
